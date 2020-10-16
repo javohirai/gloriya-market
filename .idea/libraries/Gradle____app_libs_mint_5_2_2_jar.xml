@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: ./app/libs/mint-5.2.2.jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/app/libs/mint-5.2.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
