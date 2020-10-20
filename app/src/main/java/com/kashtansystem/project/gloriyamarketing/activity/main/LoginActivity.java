@@ -2,14 +2,14 @@ package com.kashtansystem.project.gloriyamarketing.activity.main;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.v7.widget.AppCompatSpinner;
 import android.support.v7.widget.Toolbar;
-import android.text.Html;
 import android.text.TextUtils;
 import android.text.method.PasswordTransformationMethod;
 import android.view.KeyEvent;
@@ -52,6 +52,13 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
     private Dialog dialog;
     private AppCompatSpinner sProject;
 
+    // @author MrJ
+    private String mysettings = "mysettings";
+    String mloginkey = "login";
+    String mpwdkey = "pwd";
+    String mprojectkey = "project";
+    //
+
     @Override
     public boolean getHomeButtonEnable() {
         return false;
@@ -70,12 +77,13 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
         new UpdateChecker().checkUpdate(new UpdateChecker.Listener() {
             @Override
             public void shouldUpdate(int versionCode) {
-                startActivity(UpdateAppActivity.Companion.instance(LoginActivity.this,versionCode));
+                startActivity(UpdateAppActivity.Companion.instance(LoginActivity.this, versionCode));
             }
         });
         etLogin = (EditText) findViewById(R.id.etLogin);
         etPassword = (EditText) findViewById(R.id.etPassword);
         etPassword.setOnEditorActionListener(this);
+
 
         findViewById(R.id.ivShowHidePas).setOnClickListener(this);
         findViewById(R.id.btnEnter).setOnClickListener(this);
@@ -101,6 +109,23 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
         });
         // Выбор запомненного проекта
         sProject.setSelection(AppCache.USER_INFO.getProjectId(LoginActivity.this));
+
+        // @author MrJ
+        Intent intent = getIntent();
+        if (intent.getAction() == null) {
+            etLogin.setText("");
+            etPassword.setText("");
+            saveSharedReferences();
+            return;
+        }
+        String mLogin = getSharedPreferences(mysettings, Context.MODE_PRIVATE).getString(mloginkey, "");
+        String mpwd = getSharedPreferences(mysettings, Context.MODE_PRIVATE).getString(mpwdkey, "");
+        if (mLogin != "" && mpwd != "") {
+            etLogin.setText(mLogin);
+            etPassword.setText(mpwd);
+            attemptLogIn();
+        }
+        //
     }
 
     @Override
@@ -211,6 +236,10 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
                     stopService(new Intent(LoginActivity.this, MainService.class));
                 }
 
+                // @author MrJ
+                saveSharedReferences();
+                //
+
                 switch (AppCache.USER_INFO.getUserType()) {
                     case Boss:
                         /*For new Activity, NEW LOGIC*/
@@ -254,7 +283,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
                         break;
                 }
                 finish();
-            } else if(OfflineManager.INSTANCE.getGoOffline()){
+            } else if (OfflineManager.INSTANCE.getGoOffline()) {
                 final Dialog dialog = new Dialog(LoginActivity.this);
                 dialog.setTitle("Нет подключении");
                 dialog.setContentView(R.layout.dialogbox);
@@ -263,10 +292,10 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
                 if (window != null)
                     window.setLayout(-1, -2);
 
-                ((TextView)dialog.findViewById(R.id.dialogText))
+                ((TextView) dialog.findViewById(R.id.dialogText))
                         .setText(LoginActivity.this.getString(R.string.server_not_available));
 
-                Button button1 = (Button)dialog.findViewById(R.id.dialogBtn1);
+                Button button1 = (Button) dialog.findViewById(R.id.dialogBtn1);
                 button1.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -276,7 +305,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
                 });
                 button1.setText(LoginActivity.this.getString(R.string.cancell));
 
-                Button button2 = (Button)dialog.findViewById(R.id.dialogBtn2);
+                Button button2 = (Button) dialog.findViewById(R.id.dialogBtn2);
                 button2.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -287,8 +316,8 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
                 button2.setText(LoginActivity.this.getString(R.string.enter_as_offline));
 
                 dialog.show();
-            }else {
-                if(result.contains("Не удалось пройти авторизацию по причине")){
+            } else {
+                if (result.contains("Не удалось пройти авторизацию по причине")) {
                     final Dialog dialog = new Dialog(LoginActivity.this);
                     dialog.setTitle("Нет подключении");
                     dialog.setContentView(R.layout.dialogbox);
@@ -297,14 +326,14 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
                     if (window != null)
                         window.setLayout(-1, -2);
 
-                    ((TextView)dialog.findViewById(R.id.dialogText))
+                    ((TextView) dialog.findViewById(R.id.dialogText))
                             .setText(LoginActivity.this.getString(R.string.server_not_available_not_user));
 
-                    Button button1 = (Button)dialog.findViewById(R.id.dialogBtn1);
+                    Button button1 = (Button) dialog.findViewById(R.id.dialogBtn1);
                     button1.setVisibility(View.GONE);
                     button1.setText(LoginActivity.this.getString(R.string.cancell));
 
-                    Button button2 = (Button)dialog.findViewById(R.id.dialogBtn2);
+                    Button button2 = (Button) dialog.findViewById(R.id.dialogBtn2);
                     button2.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -314,11 +343,20 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
                     });
                     button2.setText(LoginActivity.this.getString(R.string.dialog_btn_ok));
                     dialog.show();
-                }else {
+                } else {
                     Toast.makeText(LoginActivity.this, result, Toast.LENGTH_LONG).show();
                 }
             }
         }
+    }
+
+    private void saveSharedReferences() {
+        SharedPreferences mSettings = getSharedPreferences(mysettings, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = mSettings.edit();
+        editor.putString(mloginkey, etLogin.getText().toString());
+        editor.putString(mpwdkey, etPassword.getText().toString());
+        editor.putInt(mprojectkey, sProject.getSelectedItemPosition());
+        editor.apply();
     }
 
     /**
@@ -358,8 +396,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
                         break;
                     case Collector:
                         /* begin hardcode for support old code part*/
-                        if (!AppCache.USERS_DETAIL.isEmpty())
-                        {
+                        if (!AppCache.USERS_DETAIL.isEmpty()) {
                             AppCache.USER_INFO.setLogined(true);
                             AppCache.USER_INFO.setUserCode(AppCache.USERS_DETAIL.get(0).getCodeUser());
                             AppCache.USER_INFO.setUserName(AppCache.USERS_DETAIL.get(0).getName());
