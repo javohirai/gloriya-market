@@ -24,14 +24,16 @@ public final class C
                 "Проект AVON",
                 "Проект EVYAP",
                 "Проект LOREAL",
-                "Проект TEST EVYAP"
+                "Проект TEST EVYAP",
+                "Проект TEST AVON"
 
         };
         String URLs[] = {
                 "http://kit.gloriya.uz:5443/AVON_UT/AVON_UT.1cws",
                 "http://kit.gloriya.uz:5443/EVYAP_UT/EVYAP_UT.1cws",
                 "http://kit.gloriya.uz:5443/loreal_ut/loreal_ut.1cws",
-                "http://kit.gloriya.uz:5443/EVYAP_TEST/EVYAP_TEST.1cws"
+                "http://kit.gloriya.uz:5443/EVYAP_TEST/EVYAP_TEST.1cws",
+                "http://kit.gloriya.uz:5443/ut_test/ut_test.1cws"
         };
 
     }
