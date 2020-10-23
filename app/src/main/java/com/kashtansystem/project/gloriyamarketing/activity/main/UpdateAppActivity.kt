@@ -24,9 +24,6 @@ import java.io.File
 import java.util.*
 import android.Manifest.permission
 
-
-
-
 class UpdateAppActivity : BaseKActivity() {
     var versionCode = -1
     var storage = FirebaseStorage.getInstance()
