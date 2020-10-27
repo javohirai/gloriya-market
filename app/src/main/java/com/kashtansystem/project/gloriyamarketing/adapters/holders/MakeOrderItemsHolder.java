@@ -12,6 +12,7 @@ import android.support.v7.widget.AppCompatSpinner;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -43,6 +44,7 @@ import com.kashtansystem.project.gloriyamarketing.models.template.CompetitorScou
 import com.kashtansystem.project.gloriyamarketing.models.template.CreditVisitTemplate;
 import com.kashtansystem.project.gloriyamarketing.models.template.GoodsByBrandTemplate;
 import com.kashtansystem.project.gloriyamarketing.models.template.MadeOrderTemplate;
+import com.kashtansystem.project.gloriyamarketing.models.template.PriceTemplate;
 import com.kashtansystem.project.gloriyamarketing.models.template.PriceTypeTemplate;
 import com.kashtansystem.project.gloriyamarketing.net.soap.ReqCheckCredit;
 import com.kashtansystem.project.gloriyamarketing.utils.C;
@@ -50,6 +52,8 @@ import com.kashtansystem.project.gloriyamarketing.utils.L;
 import com.kashtansystem.project.gloriyamarketing.utils.Util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by FlameKaf on 17.07.2017.
@@ -544,8 +548,40 @@ public class MakeOrderItemsHolder extends Fragment implements AdapterView.OnItem
             View selectedPrice = view.findViewById(R.id.labelText);
             madeOrderTemplate.setPriceType(selectedPrice.getTag().toString());
             madeOrderTemplate.setPriceTypeName(((TextView) selectedPrice).getText().toString());
+            // @author MrJ
+            HashMap<String, PriceTemplate> priceList = AppDB.getInstance(getContext()).getPriceListByPriceType(selectedPrice.getTag().toString());
+
+            for (MadeOrderTemplate orderItem : MakeOrderNewActivity.orderItems ) {
+                Map<String,GoodsByBrandTemplate> goods = orderItem.getGoodsList();
+                double totalPrice = 0;
+                for(Map.Entry<String,GoodsByBrandTemplate> goodItem: goods.entrySet()){
+                    Log.d("TAG",goodItem.getKey() + " " + goodItem.getValue());
+                    GoodsByBrandTemplate subItem = goodItem.getValue();
+                    if (priceList.containsKey(subItem.getProductCode())) {
+                        PriceTemplate price = priceList.get(subItem.getProductCode());
+                        subItem.setOriginalPrice(price.getPrice());
+                        subItem.setDiscountValue(price.getDiscount());
+                        subItem.setPrice((price.getDiscount() == 0 ? price.getPrice() : price.getNewPrice()));
+                        subItem.setTotal(subItem.getAmount()*subItem.getPrice());
+                        totalPrice += subItem.getTotal();
+                    }
+                }
+                orderItem.setTotalPrice(totalPrice);
+            }
+
+            Log.d("asd",priceList.size()+" asd");
+            //
         }
+        updateTextView();
     }
+
+    // @author MrJ
+    public void updateTextView(){
+        TextView tvTotalPrice = (TextView) getView().findViewById(R.id.orderTotalPrice);
+        tvTotalPrice.setText(String.format("%s %s", getString(R.string.label_order_total_price),
+                Util.getParsedPrice(madeOrderTemplate.getTotalPrice())));
+    }
+    //
 
     @Override
     public void onNothingSelected(AdapterView<?> parent)
