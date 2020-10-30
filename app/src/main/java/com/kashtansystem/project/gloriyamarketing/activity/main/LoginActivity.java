@@ -39,6 +39,7 @@ import com.kashtansystem.project.gloriyamarketing.net.soap.ReqLoginMultiUser;
 import com.kashtansystem.project.gloriyamarketing.service.MainService;
 import com.kashtansystem.project.gloriyamarketing.utils.AppCache;
 import com.kashtansystem.project.gloriyamarketing.utils.C;
+import com.kashtansystem.project.gloriyamarketing.utils.L;
 import com.kashtansystem.project.gloriyamarketing.utils.UpdateChecker;
 import com.kashtansystem.project.gloriyamarketing.utils.UserType;
 
@@ -53,9 +54,9 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
     private AppCompatSpinner sProject;
 
     // @author MrJ
-    private String mysettings = "mysettings";
+    public final static String mysettings = "mysettings";
     String mloginkey = "login";
-    String mpwdkey = "pwd";
+    public final static String mpwdkey = "pwd";
     String mprojectkey = "project";
     //
 
@@ -111,6 +112,10 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
         sProject.setSelection(AppCache.USER_INFO.getProjectId(LoginActivity.this));
 
         // @author MrJ
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        L.UpdateTimePriceList = sp.getString(L.keyUpdateTimePriceList,"");
+        L.oldUpdateTimePriceList = sp.getString(L.keyoldUpdateTimePriceList,"");
+
         Intent intent = getIntent();
         if (intent.getAction() == null) {
             etLogin.setText("");

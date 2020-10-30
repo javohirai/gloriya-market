@@ -1,8 +1,10 @@
 package com.kashtansystem.project.gloriyamarketing.activity.agent;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
 import android.os.AsyncTask;
@@ -12,25 +14,37 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.kashtansystem.project.gloriyamarketing.R;
+import com.kashtansystem.project.gloriyamarketing.activity.main.AgentActivity;
 import com.kashtansystem.project.gloriyamarketing.activity.main.BaseActivity;
+import com.kashtansystem.project.gloriyamarketing.activity.main.LoginActivity;
 import com.kashtansystem.project.gloriyamarketing.adapters.MakeOrderItemsAdapter;
+import com.kashtansystem.project.gloriyamarketing.adapters.PS_orderListAdapter;
 import com.kashtansystem.project.gloriyamarketing.database.AppDB;
 import com.kashtansystem.project.gloriyamarketing.models.listener.OnDialogBtnsClickListener;
 import com.kashtansystem.project.gloriyamarketing.models.template.CreditVisitTemplate;
+import com.kashtansystem.project.gloriyamarketing.models.template.GoodsByBrandTemplate;
 import com.kashtansystem.project.gloriyamarketing.models.template.MadeOrderTemplate;
 import com.kashtansystem.project.gloriyamarketing.models.template.OrderTemplate;
+import com.kashtansystem.project.gloriyamarketing.models.template.PriceTemplate;
+import com.kashtansystem.project.gloriyamarketing.models.template.PriceTypeTemplate;
 import com.kashtansystem.project.gloriyamarketing.models.template.SendOrderResponseTemplate;
 import com.kashtansystem.project.gloriyamarketing.models.template.TradingPointTemplate;
+import com.kashtansystem.project.gloriyamarketing.net.soap.PS_ReqGetPriceListUpdateTime;
+import com.kashtansystem.project.gloriyamarketing.net.soap.ReqLogin;
 import com.kashtansystem.project.gloriyamarketing.net.soap.ReqOrderForEdit;
+import com.kashtansystem.project.gloriyamarketing.net.soap.ReqPriceList;
+import com.kashtansystem.project.gloriyamarketing.net.soap.ReqPriceType;
 import com.kashtansystem.project.gloriyamarketing.net.soap.ReqSendOrder;
 import com.kashtansystem.project.gloriyamarketing.service.ReloadProductIntentService;
 import com.kashtansystem.project.gloriyamarketing.utils.AppCache;
@@ -40,7 +54,11 @@ import com.kashtansystem.project.gloriyamarketing.utils.GPS;
 import com.kashtansystem.project.gloriyamarketing.utils.GPStatus;
 import com.kashtansystem.project.gloriyamarketing.utils.OrderStatus;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by FlameKaf on 17.07.2017.
@@ -50,6 +68,11 @@ import java.util.LinkedList;
 
 public class MakeOrderNewActivity extends BaseActivity implements GPS.OnCoordinatsReceiveListener,
         View.OnClickListener {
+
+    // @author MrJ
+    private List<MadeOrderTemplate> changedOrders;
+    //
+
     public static TradingPointTemplate tradingPoint;
     public static String warehouseCode = "";
     public static String contractCode = "";
@@ -80,6 +103,10 @@ public class MakeOrderNewActivity extends BaseActivity implements GPS.OnCoordina
         setContentView(R.layout.make_order);
         setSupportActionBar((Toolbar) findViewById(R.id.appToolBar));
         findViewById(R.id.appTabs).setVisibility(View.VISIBLE);
+
+        // @author MrJ
+        changedOrders = new ArrayList<>();
+        //
 
         gps = new GPS(this, this);
         tradingPoint = getIntent().getParcelableExtra(C.KEYS.EXTRA_DATA_TP);
@@ -473,6 +500,113 @@ public class MakeOrderNewActivity extends BaseActivity implements GPS.OnCoordina
             int counter = 0;
             SendOrderResponseTemplate response = new SendOrderResponseTemplate();
 
+            // @author MrJ
+            String result = ReqLogin.authorization(AppCache.USER_INFO.getLogin(AppCache.USER_INFO.getProjectId(context), context),
+                    getSharedPreferences(LoginActivity.mysettings, Context.MODE_PRIVATE).getString(LoginActivity.mpwdkey, ""));
+            if (result.isEmpty()) {
+                PS_ReqGetPriceListUpdateTime.load(context);
+                boolean needToUpdatePrices = AppDB.getInstance(context).needToUpdatePriceTypes(0);
+                if (needToUpdatePrices) {
+
+                    publishProgress(getString(R.string.dialog_text_sending), "Загрузка вид цен");
+                    ReqPriceType.load(context);
+                    publishProgress(getString(R.string.dialog_text_sending), "Загрузка прайс лист");
+                    ReqPriceList.load(context);
+
+
+                    for (MadeOrderTemplate madeOrder : orderItems) {
+                        // получаю новые цены товаров
+                        HashMap<String, PriceTemplate> priceList = AppDB.getInstance(context).getPriceListByPriceType(madeOrder.getPriceType());
+
+                        double totalPrice = 0;
+                        if (madeOrder.getStatus() != OrderStatus.Sent) {
+                            // список товаров заказа
+                            Map<String, GoodsByBrandTemplate> goodList = madeOrder.getGoodsList();
+                            // Обход список товаров заказа
+                            for (Map.Entry<String, GoodsByBrandTemplate> goods : goodList.entrySet()) {
+                                GoodsByBrandTemplate good = goodList.get(goods.getKey());
+
+                                // Изменение цены и общей суммы
+                                if (priceList.containsKey(good.getProductCode())) {
+                                    PriceTemplate price = priceList.get(good.getProductCode());
+                                    good.setOriginalPrice(price.getPrice());
+                                    good.setDiscountValue(price.getDiscount());
+                                    good.setPrice((price.getDiscount() == 0 ? price.getPrice() : price.getNewPrice()));
+                                    good.setTotal(good.getAmount() * good.getPrice());
+                                    totalPrice += good.getTotal();
+                                }
+
+                            }
+
+                        }
+
+                        if (madeOrder.getTotalPrice() != totalPrice) {
+                            madeOrder.setTotalPrice(totalPrice);
+                            changedOrders.add(madeOrder);
+                        }
+                    }
+                }
+
+                // получаю список сохранённых документов
+                List<OrderTemplate> savedOrders = AppDB.getInstance(context).getSavedOrders();
+                // Обход сохранённых документов
+                for (OrderTemplate savedOrder : savedOrders) {
+                    int valueOfStatus = savedOrder.getOrderStatus().getValue();
+                    if (valueOfStatus != 299 || valueOfStatus != 300 || valueOfStatus != 301) {
+                        continue;
+                    }
+
+                    // сохраняем текущую общую сумму
+                    double oldTotalprice = savedOrder.getTotalPrice();
+                    // получаю заказ по ID
+                    MadeOrderTemplate madeOrderForEdit = AppDB.getInstance(context).getMadeOrderForEdit(savedOrder.getId());
+                    // получаю типы цен товаров
+                    List<PriceTypeTemplate> priceTypeTemplates = AppDB.getInstance(context).getPriceTypeList();
+                    // Код типа цен текущего документа
+                    String priceCode = "";
+                    for (PriceTypeTemplate priceTypeTemplate : priceTypeTemplates) {
+                        if (priceTypeTemplate.getName().equals(savedOrder.getPriceTypeName())) {
+                            priceCode = priceTypeTemplate.getCode();
+                            break;
+                        }
+                    }
+                    // получаю новые цены товаров
+                    HashMap<String, PriceTemplate> priceList = AppDB.getInstance(context).getPriceListByPriceType(priceCode);
+                    // список товаров заказа
+                    Map<String, GoodsByBrandTemplate> goodList = madeOrderForEdit.getGoodsList();
+                    double totalPrice = 0;
+                    // Обход список товаров заказа
+                    for (Map.Entry<String, GoodsByBrandTemplate> goods : goodList.entrySet()) {
+                        GoodsByBrandTemplate good = goodList.get(goods.getKey());
+
+                        // Изменение цены и общей суммы
+                        if (priceList.containsKey(good.getProductCode())) {
+                            PriceTemplate price = priceList.get(good.getProductCode());
+                            good.setOriginalPrice(price.getPrice());
+                            good.setDiscountValue(price.getDiscount());
+                            good.setPrice((price.getDiscount() == 0 ? price.getPrice() : price.getNewPrice()));
+                            good.setTotal(good.getAmount() * good.getPrice());
+                            totalPrice += good.getTotal();
+                        }
+
+                    }
+                    madeOrderForEdit.setTotalPrice(totalPrice);
+                    // сравнение итогов, если отличаются то тогда записываем в список
+                    if (oldTotalprice != madeOrderForEdit.getTotalPrice()) {
+                        changedOrders.add(madeOrderForEdit);
+                        // Сохраняем документы в бд приложения
+                        AppDB.getInstance(context).editOrder(madeOrderForEdit);
+                    }
+                }
+                if (changedOrders.size() > 0) {
+                    successfyllySendOrSave = false;
+                    response.setResponseCode("-10");
+                    response.setMessage("Ошибка! Произошла актуализация цен. Заново синхронизируйте заказ!");
+                    return response;
+                }
+            }
+            //
+
             for (MadeOrderTemplate madeOrder : orderItems) {
                 if (madeOrder.getStatus() != OrderStatus.Sent) {
                     if (madeOrder.getLatitude() == 0) {
@@ -554,6 +688,25 @@ public class MakeOrderNewActivity extends BaseActivity implements GPS.OnCoordina
 
                 if (result.getResponseCode().equals("2"))
                     InformDialog(String.format("%s. %s", result.getOrderTitle(), result.getMessage()), result.getOrderId());
+                else if (result.getResponseCode().equals("-10")){
+                    if (changedOrders.size() > 0) {
+                        LayoutInflater lf = LayoutInflater.from(MakeOrderNewActivity.this);
+                        AlertDialog.Builder adb = new AlertDialog.Builder(MakeOrderNewActivity.this);
+                        ListAdapter adapter = new PS_orderListAdapter(lf, changedOrders);
+                        adb.setAdapter(adapter, null);
+                        adb.setNegativeButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                                changedOrders.clear();
+                            }
+                        });
+                        adb.setTitle("Внимание! Обнаружено обновление цен!");
+                        adb.create().show();
+                        Toast.makeText(MakeOrderNewActivity.this,"Суммы сохраненных и открытых заказов актуализированы!\n" +
+                                "Повторите отправку заказа!",Toast.LENGTH_LONG).show();
+                    }
+                }
                 return;
             }
 

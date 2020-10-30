@@ -1,12 +1,12 @@
 <component name="libraryTable">
   <library name="Gradle: com.android.support.test:rules:0.5@aar">
     <ANNOTATIONS>
-      <root url="jar://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/5bf2dbdc92245dcd8cc8ec43da851ab6/rules-0.5/annotations.zip!/" />
+      <root url="jar://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/2038d715398633d96915009608efa66e/rules-0.5/annotations.zip!/" />
     </ANNOTATIONS>
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/5bf2dbdc92245dcd8cc8ec43da851ab6/rules-0.5/jars/classes.jar!/" />
-      <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/5bf2dbdc92245dcd8cc8ec43da851ab6/rules-0.5/res" />
-      <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/5bf2dbdc92245dcd8cc8ec43da851ab6/rules-0.5/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/2038d715398633d96915009608efa66e/rules-0.5/jars/classes.jar!/" />
+      <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/2038d715398633d96915009608efa66e/rules-0.5/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/2038d715398633d96915009608efa66e/rules-0.5/res" />
     </CLASSES>
     <JAVADOC>
       <root url="jar://$PROJECT_DIR$/../gradle-6.4.1/caches/modules-2/files-2.1/com.android.support.test/rules/0.5/71c1df91db9f063a68e2e52a8568c9f3bd3c1c73/rules-0.5-javadoc.jar!/" />

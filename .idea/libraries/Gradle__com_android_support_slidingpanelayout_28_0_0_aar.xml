@@ -1,9 +1,10 @@
 <component name="libraryTable">
   <library name="Gradle: com.android.support:slidingpanelayout:28.0.0@aar">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/a573c401dda5fc07f87fbf2b06d30713/slidingpanelayout-28.0.0/jars/classes.jar!/" />
       <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/a573c401dda5fc07f87fbf2b06d30713/slidingpanelayout-28.0.0/res" />
-      <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/a573c401dda5fc07f87fbf2b06d30713/slidingpanelayout-28.0.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/7a9d40c0e35e32f0f4c1c04323eabc4b/slidingpanelayout-28.0.0/jars/classes.jar!/" />
+      <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/7a9d40c0e35e32f0f4c1c04323eabc4b/slidingpanelayout-28.0.0/res" />
+      <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/7a9d40c0e35e32f0f4c1c04323eabc4b/slidingpanelayout-28.0.0/AndroidManifest.xml" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

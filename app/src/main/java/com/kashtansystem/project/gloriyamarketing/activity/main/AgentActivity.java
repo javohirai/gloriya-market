@@ -1,26 +1,44 @@
 package com.kashtansystem.project.gloriyamarketing.activity.main;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Adapter;
+import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.kashtansystem.project.gloriyamarketing.R;
+import com.kashtansystem.project.gloriyamarketing.activity.agent.MakeOrderNewActivity;
 import com.kashtansystem.project.gloriyamarketing.activity.agent.TradingPointsActivity;
 import com.kashtansystem.project.gloriyamarketing.activity.agent.TradingPointsByInnActivity;
+import com.kashtansystem.project.gloriyamarketing.adapters.PS_orderListAdapter;
 import com.kashtansystem.project.gloriyamarketing.core.OfflineManager;
 import com.kashtansystem.project.gloriyamarketing.database.AppDB;
 import com.kashtansystem.project.gloriyamarketing.models.listener.OnDialogBtnsClickListener;
+import com.kashtansystem.project.gloriyamarketing.models.template.GoodsByBrandTemplate;
+import com.kashtansystem.project.gloriyamarketing.models.template.MadeOrderTemplate;
+import com.kashtansystem.project.gloriyamarketing.models.template.OrderTemplate;
+import com.kashtansystem.project.gloriyamarketing.models.template.PriceTemplate;
+import com.kashtansystem.project.gloriyamarketing.models.template.PriceTypeTemplate;
 import com.kashtansystem.project.gloriyamarketing.models.template.UserTemplate;
+import com.kashtansystem.project.gloriyamarketing.net.soap.PS_ReqGetPriceListUpdateTime;
 import com.kashtansystem.project.gloriyamarketing.net.soap.ReqBusinessRegions;
 import com.kashtansystem.project.gloriyamarketing.net.soap.ReqDocumentTypes;
 import com.kashtansystem.project.gloriyamarketing.net.soap.ReqGetClients;
@@ -39,6 +57,12 @@ import com.kashtansystem.project.gloriyamarketing.utils.C;
 import com.kashtansystem.project.gloriyamarketing.utils.L;
 import com.kashtansystem.project.gloriyamarketing.utils.UserType;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Created by FlameKaf on 10.05.2017.
  * ----------------------------------
@@ -46,6 +70,10 @@ import com.kashtansystem.project.gloriyamarketing.utils.UserType;
  */
 
 public class AgentActivity extends BaseActivity implements View.OnClickListener {
+
+    // Массив элементов для вывода в диалог пользователью
+    List<MadeOrderTemplate> changedOrders = new ArrayList<>();
+
     private OnDialogBtnsClickListener onExitListener = new OnDialogBtnsClickListener() {
         @Override
         public void onBtnClick(View view, Intent intent) {
@@ -165,11 +193,13 @@ public class AgentActivity extends BaseActivity implements View.OnClickListener 
                         R.string.dialog_text_load_bus_regions,
                         R.string.load_organization,
                         R.string.load_stocks,
+                        R.string.dialog_text_load_price_type_updateTime,
                         R.string.dialog_text_load_price_type,
                         R.string.dialog_text_load_price,
                         R.string.dialog_text_load_product,
                         R.string.dialog_text_download_clients,
-                        R.string.dialog_text_load_discount
+                        R.string.dialog_text_load_discount,
+                        R.string.dialog_text_load_documents
                 };
         private Dialog dialog;
         private Context context;
@@ -209,14 +239,20 @@ public class AgentActivity extends BaseActivity implements View.OnClickListener 
             publishProgress(2);
             ReqGetWarehouse.load(AgentActivity.this);
 
+            // @author MrJ
+            // TODO загружаю updateTime для виды цен
             publishProgress(3);
-            if (AppDB.getInstance(context).needToUpdatePriceTypes(days))
+            PS_ReqGetPriceListUpdateTime.load(context);
+            //
+
+            if (AppDB.getInstance(context).needToUpdatePriceTypes(days)) {
+                publishProgress(4);
                 ReqPriceType.load(context);
+                publishProgress(5);
+                ReqPriceList.load(context);
+            }
 
-            publishProgress(4);
-            ReqPriceList.load(context);
-
-            publishProgress(5);
+            publishProgress(6);
 
             ReqProductBalance.load(context);
 
@@ -224,13 +260,74 @@ public class AgentActivity extends BaseActivity implements View.OnClickListener 
                     .getString(C.KEYS.SYNC_FREQUENCY_PREF_CLIENTS, "7"));
             L.info("sync frequency pref clients: " + days);
             if (AppDB.getInstance(context).needToUpdateClients(days)) {
-                publishProgress(6);
+                publishProgress(7);
                 AppDB.getInstance(context).saveClients(ReqGetClients.load());
             }
 
-            publishProgress(7);
+            publishProgress(8);
             ReqSpecEvents.load(context);
             ReqDocumentTypes.load(context);
+
+            // @author MrJ
+            // TODO проверка - когда цена изменилось со стороны API, пересчитаем цены и выведем в список изменённые документы
+            if (AppDB.getInstance(context).needToUpdatePriceTypes(days)) {
+                publishProgress(9);
+
+                // получаю список сохранённых документов
+                List<OrderTemplate> savedOrders = AppDB.getInstance(context).getSavedOrders();
+                // Обход сохранённых документов
+                for (OrderTemplate savedOrder : savedOrders) {
+                   int valueOfStatus = savedOrder.getOrderStatus().getValue();
+                    if(valueOfStatus!=299||valueOfStatus!=300||valueOfStatus!=301)
+                    {
+                        continue;
+                    }
+                    // сохраняем текущую общую сумму
+                    double oldTotalprice = savedOrder.getTotalPrice();
+                    // получаю заказ по ID
+                    MadeOrderTemplate madeOrderForEdit = AppDB.getInstance(context).getMadeOrderForEdit(savedOrder.getId());
+                    // получаю типы цен товаров
+                    List<PriceTypeTemplate> priceTypeTemplates = AppDB.getInstance(context).getPriceTypeList();
+                    // Код типа цен текущего документа
+                    String priceCode = "";
+                    for (PriceTypeTemplate priceTypeTemplate : priceTypeTemplates) {
+                        if (priceTypeTemplate.getName().equals(savedOrder.getPriceTypeName())){
+                            priceCode = priceTypeTemplate.getCode();
+                            break;
+                        }
+                    }
+                    // получаю новые цены товаров
+                    HashMap<String, PriceTemplate> priceList = AppDB.getInstance(context).getPriceListByPriceType(priceCode);
+                    // список товаров заказа
+                    Map<String, GoodsByBrandTemplate> goodList = madeOrderForEdit.getGoodsList();
+                    double totalPrice = 0;
+                    // Обход список товаров заказа
+                    for (Map.Entry<String, GoodsByBrandTemplate> goods : goodList.entrySet()) {
+                        GoodsByBrandTemplate good = goodList.get(goods.getKey());
+
+                        // Изменение цены и общей суммы
+                        if (priceList.containsKey(good.getProductCode())) {
+                            PriceTemplate price = priceList.get(good.getProductCode());
+                            good.setOriginalPrice(price.getPrice());
+                            good.setDiscountValue(price.getDiscount());
+                            good.setPrice((price.getDiscount() == 0 ? price.getPrice() : price.getNewPrice()));
+                            good.setTotal(good.getAmount()*good.getPrice());
+                            totalPrice += good.getTotal();
+                        }
+
+                    }
+                    madeOrderForEdit.setTotalPrice(totalPrice);
+                    // сравнение итогов, если отличаются то тогда записываем в список
+                    if (oldTotalprice != madeOrderForEdit.getTotalPrice()) {
+                        changedOrders.add(madeOrderForEdit);
+                        // Сохраняем документы в бд приложения
+                        AppDB.getInstance(context).editOrder(madeOrderForEdit);
+                    }
+
+
+                }
+            }
+            //
 
             return null;
         }
@@ -272,6 +369,22 @@ public class AgentActivity extends BaseActivity implements View.OnClickListener 
             ((TextView) findViewById(R.id.akbFact)).setText(Integer.toString(AppCache.USER_INFO.getAkbFact()));
             ((TextView) findViewById(R.id.akbPercent)).setText(AppCache.USER_INFO.getAkbPercent());
             ((TextView) findViewById(R.id.kpiUpdateDate)).setText(AppCache.USER_INFO.getKpiUpdatedDate());
+
+            // Если существует изменённые документы пока выводим в логи
+            if (changedOrders.size() > 0){
+                LayoutInflater lf = LayoutInflater.from(AgentActivity.this);
+                AlertDialog.Builder adb = new AlertDialog.Builder(AgentActivity.this);
+                ListAdapter adapter = new PS_orderListAdapter(lf,changedOrders);
+                adb.setAdapter(adapter,null);
+                adb.setNegativeButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                adb.setTitle("Цены товаров были изменены. Суммы следующих заказов были пересчитаны");
+                adb.create().show();
+            }
         }
     }
 }

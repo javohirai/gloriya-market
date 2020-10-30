@@ -42,6 +42,9 @@
     <string name="dialog_text_load_price">Загрузка цен…</string>
     <string name="dialog_text_load_bus_regions">Загрузка бизнес регионов…</string>
     <string name="dialog_text_load_price_type">Загрузка типов цен…</string>
+    <string name="dialog_text_load_price_type_updateTime">Загрузка дату последнего изменения вид цен…</string>
+    <string name="dialog_text_load_documents">Чтение сохраненённых документов и пересчёт цен…</string>
+
     <string name="dialog_text_load_product">Загрузка товаров…</string>
     <string name="dialog_text_load_discount">Загрузка скидок/акций…</string>
     <string name="dialog_text_load_data">Загрузка данных…</string>

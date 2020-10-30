@@ -2,10 +2,14 @@ package com.kashtansystem.project.gloriyamarketing.database;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.preference.PreferenceManager;
+import android.util.Log;
 
 import com.kashtansystem.project.gloriyamarketing.R;
+import com.kashtansystem.project.gloriyamarketing.activity.main.AgentActivity;
 import com.kashtansystem.project.gloriyamarketing.database.tables.BusinessRegions;
 import com.kashtansystem.project.gloriyamarketing.database.tables.Clients;
 import com.kashtansystem.project.gloriyamarketing.database.tables.ContractType;
@@ -20,6 +24,7 @@ import com.kashtansystem.project.gloriyamarketing.database.tables.OrdersNotEnoug
 import com.kashtansystem.project.gloriyamarketing.database.tables.OrdersNotEnoughGoods;
 import com.kashtansystem.project.gloriyamarketing.database.tables.Orders;
 import com.kashtansystem.project.gloriyamarketing.database.tables.Organization;
+import com.kashtansystem.project.gloriyamarketing.database.tables.PS_PriceListUpdateTime;
 import com.kashtansystem.project.gloriyamarketing.database.tables.ParcelTemp;
 import com.kashtansystem.project.gloriyamarketing.database.tables.PriceList;
 import com.kashtansystem.project.gloriyamarketing.database.tables.PriceType;
@@ -44,6 +49,8 @@ import com.kashtansystem.project.gloriyamarketing.models.template.RefusalTemplat
 import com.kashtansystem.project.gloriyamarketing.models.template.SeriesTemplate;
 import com.kashtansystem.project.gloriyamarketing.models.template.WarehouseTemplate;
 import com.kashtansystem.project.gloriyamarketing.models.template.TradingPointTemplate;
+import com.kashtansystem.project.gloriyamarketing.net.soap.PS_ReqGetPriceListUpdateTime;
+import com.kashtansystem.project.gloriyamarketing.net.soap.ReqPriceType;
 import com.kashtansystem.project.gloriyamarketing.utils.AppCache;
 import com.kashtansystem.project.gloriyamarketing.utils.L;
 import com.kashtansystem.project.gloriyamarketing.utils.OrderStatus;
@@ -51,6 +58,7 @@ import com.kashtansystem.project.gloriyamarketing.utils.Util;
 import com.readystatesoftware.sqliteasset.SQLiteAssetHelper;
 
 import org.ksoap2.serialization.SoapObject;
+import org.ksoap2.serialization.SoapPrimitive;
 
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -73,6 +81,9 @@ import java.util.HashMap;
 
 public class AppDB {
     private static AppDB instance;
+    // @author MrJ
+    private static SharedPreferences sp = null;
+    //
     private static SQLiteDatabase sqLiteDatabase;
 
     private static class AppDBHelper extends SQLiteAssetHelper {
@@ -86,6 +97,9 @@ public class AppDB {
 
     private AppDB(Context context) {
         sqLiteDatabase = new AppDBHelper(context).getWritableDatabase();
+        // @author MrJ
+        sp = PreferenceManager.getDefaultSharedPreferences(context);
+        //
     }
 
     public static AppDB getInstance(Context context) {
@@ -294,8 +308,8 @@ public class AppDB {
      */
     public synchronized void addProduct(Context context, SoapObject items, Boolean clear) {
         try {
-            if(clear)
-            clearProducts();
+            if (clear)
+                clearProducts();
             sqLiteDatabase.beginTransaction();
             //L.info("Products and Balances");
             for (int i = 0; items.getPropertyCount() > i; i++) {
@@ -382,6 +396,17 @@ public class AppDB {
      * @param days количество дней по истичению которых нужно обновить справочник
      */
     public synchronized boolean needToUpdatePriceTypes(int days) {
+
+        // @author MrJ
+        // TODO: Запросим дату последнего изменения цены и сверим
+
+        try {
+            return !L.UpdateTimePriceList.equals(L.oldUpdateTimePriceList);
+        } catch (Exception ex) {
+            Log.d("Exc", "Error");
+        }
+        //
+
         // TODO: Необходимо учесть, что перезаходят разные пользователи с разными настройками
         if (days == -1)
             return false;
@@ -2204,7 +2229,7 @@ public class AppDB {
     }
 
 
-    public synchronized void saveContractTypes(SoapObject items){
+    public synchronized void saveContractTypes(SoapObject items) {
         sqLiteDatabase.beginTransaction();
         clearAllContractTypes();
         try {
@@ -2228,7 +2253,7 @@ public class AppDB {
         return;
     }
 
-    public synchronized void saveContracts(SoapObject items, String tpCode){
+    public synchronized void saveContracts(SoapObject items, String tpCode) {
         sqLiteDatabase.beginTransaction();
         clearContracts(tpCode);
         try {
@@ -2238,7 +2263,7 @@ public class AppDB {
                 ContentValues fields = new ContentValues();
                 fields.put(Contracts.ClientTpCode, tpCode);
                 fields.put(Contracts.DateOfContract, refusal.getProperty("DateOfContract").toString());
-                fields.put(Contracts.CodeContract, refusal.getProperty("CodeContract").toString().replace("anyType{}",""));
+                fields.put(Contracts.CodeContract, refusal.getProperty("CodeContract").toString().replace("anyType{}", ""));
                 fields.put(Contracts.SumOfContract, refusal.getProperty("SumOfContract").toString());
                 fields.put(Contracts.TermOfContract, refusal.getProperty("TermOfContract").toString());
                 fields.put(Contracts.TypeOfContract, refusal.getProperty("TypeContract").toString());
@@ -2258,7 +2283,7 @@ public class AppDB {
         LinkedList<ContractTemplate> result = new LinkedList<>();
 
         Cursor cursor = sqLiteDatabase.rawQuery(String.format("select * from %s where tpCode = '%s'",
-                Contracts.Table,tpCode), null);
+                Contracts.Table, tpCode), null);
 
         SimpleDateFormat simpleDF = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
@@ -2372,7 +2397,7 @@ public class AppDB {
         }
     }
 
-    public synchronized void clearAllContractTypes(){
+    public synchronized void clearAllContractTypes() {
         try {
             sqLiteDatabase.delete(ContractType.Table, null, null);
         } catch (IllegalStateException ex) {
@@ -2381,5 +2406,36 @@ public class AppDB {
         } finally {
         }
     }
+
+    // @author MrJ
+    public synchronized void savePriceListUpdateTime(SoapObject items) {
+        try {
+            for (int i = 0; items.getPropertyCount() > i; i++) {
+                SoapPrimitive refusal = (SoapPrimitive) items.getProperty(i);
+                ContentValues fields = new ContentValues();
+                if (L.UpdateTimePriceList.equals("") || !L.UpdateTimePriceList.equals(refusal.toString())) {
+                    L.oldUpdateTimePriceList = L.UpdateTimePriceList;
+                    L.UpdateTimePriceList = refusal.toString();
+                    if (sp != null) {
+                        sp.edit()
+                                .putString(L.keyoldUpdateTimePriceList, sp.getString(L.keyUpdateTimePriceList, ""))
+                                .putString(L.keyUpdateTimePriceList, refusal.toString())
+                                .apply();
+                    }
+                } else {
+                    L.oldUpdateTimePriceList = L.UpdateTimePriceList;
+                    if (sp != null) {
+                        sp.edit()
+                                .putString(L.keyoldUpdateTimePriceList, sp.getString(L.keyUpdateTimePriceList, ""))
+                                .apply();
+                    }
+                }
+            }
+        } catch (IllegalStateException ex) {
+            L.exception("---> LOCALE SAVE PriceListUpdateTime TABLE <---");
+            L.exception(ex);
+        }
+    }
+    //
 
 }
