@@ -43,6 +43,8 @@ import com.kashtansystem.project.gloriyamarketing.utils.L;
 import com.kashtansystem.project.gloriyamarketing.utils.UpdateChecker;
 import com.kashtansystem.project.gloriyamarketing.utils.UserType;
 
+import java.util.Date;
+
 /**
  * Created by FlameKaf on 04.05.2017.
  * ----------------------------------
@@ -115,6 +117,11 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         L.UpdateTimePriceList = sp.getString(L.keyUpdateTimePriceList,"");
         L.oldUpdateTimePriceList = sp.getString(L.keyoldUpdateTimePriceList,"");
+
+        // Получение даты установки в заказах
+        sp.edit().putInt(L.key_date_of_edit_banned,-100).apply();
+        int date_of_edit_banned = sp.getInt(L.key_date_of_edit_banned,-100);
+        L.date_of_edit_banned = date_of_edit_banned;
 
         Intent intent = getIntent();
         if (intent.getAction() == null) {

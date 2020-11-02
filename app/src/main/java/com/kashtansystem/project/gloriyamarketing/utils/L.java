@@ -2,13 +2,17 @@ package com.kashtansystem.project.gloriyamarketing.utils;
 
 import android.util.Log;
 
+import java.util.Date;
+
 public class L {
     private static final String TAG = "gloriyamarketing";
 
     public static final String keyUpdateTimePriceList = "keyUpdateTimePriceList";
     public static final String keyoldUpdateTimePriceList = "keyoldUpdateTimePriceList";
+    public static final String key_date_of_edit_banned = "keydate_of_edit_banned";
     public static String UpdateTimePriceList = "";
     public static String oldUpdateTimePriceList = "";
+    public static int date_of_edit_banned = -1;
 
     public static void info(String text) {
         try {

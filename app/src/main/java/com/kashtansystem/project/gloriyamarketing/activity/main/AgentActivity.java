@@ -354,6 +354,7 @@ public class AgentActivity extends BaseActivity implements View.OnClickListener 
         @Override
         protected Void doInBackground(Void... params) {
             ReqGetKPI.load();
+            PS_ReqGetPriceListUpdateTime.loadLastSellDate(AgentActivity.this);
             return null;
         }
 

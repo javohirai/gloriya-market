@@ -2412,7 +2412,6 @@ public class AppDB {
         try {
             for (int i = 0; items.getPropertyCount() > i; i++) {
                 SoapPrimitive refusal = (SoapPrimitive) items.getProperty(i);
-                ContentValues fields = new ContentValues();
                 if (L.UpdateTimePriceList.equals("") || !L.UpdateTimePriceList.equals(refusal.toString())) {
                     L.oldUpdateTimePriceList = L.UpdateTimePriceList;
                     L.UpdateTimePriceList = refusal.toString();
@@ -2427,6 +2426,27 @@ public class AppDB {
                     if (sp != null) {
                         sp.edit()
                                 .putString(L.keyoldUpdateTimePriceList, sp.getString(L.keyUpdateTimePriceList, ""))
+                                .apply();
+                    }
+                }
+            }
+        } catch (IllegalStateException ex) {
+            L.exception("---> LOCALE SAVE PriceListUpdateTime TABLE <---");
+            L.exception(ex);
+        }
+    }
+
+    public synchronized void saveLastSellDate(SoapObject items) {
+        try {
+            for (int i = 0; items.getPropertyCount() > i; i++) {
+                SoapPrimitive refusal = (SoapPrimitive) items.getProperty(i);
+                int valueOfDateBinned = (Integer.parseInt(refusal.toString()));
+                boolean isDateOfBanned = (L.date_of_edit_banned == valueOfDateBinned);
+                if (L.date_of_edit_banned == (-1) || !(isDateOfBanned)) {
+                    L.date_of_edit_banned = valueOfDateBinned;
+                    if (sp != null) {
+                        sp.edit()
+                                .putInt(L.key_date_of_edit_banned, valueOfDateBinned)
                                 .apply();
                     }
                 }

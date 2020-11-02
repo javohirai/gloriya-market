@@ -2,7 +2,6 @@ package com.kashtansystem.project.gloriyamarketing.net.soap;
 
 import android.content.Context;
 
-import com.kashtansystem.project.gloriyamarketing.activity.main.AgentActivity;
 import com.kashtansystem.project.gloriyamarketing.database.AppDB;
 import com.kashtansystem.project.gloriyamarketing.utils.AppCache;
 import com.kashtansystem.project.gloriyamarketing.utils.C;
@@ -32,6 +31,34 @@ public class PS_ReqGetPriceListUpdateTime {
             httpTransportSE.call(soapAction, envelope);
             SoapObject response = (SoapObject)envelope.getResponse();
             AppDB.getInstance(context).savePriceListUpdateTime(response);
+        }
+        catch (Exception ex)
+        {
+            L.exception(">>> EXCEPTION: load organization <<<");
+            ex.printStackTrace();
+        }
+        loadLastSellDate(context);
+
+    }
+
+    public static void loadLastSellDate(Context context) {
+        // TODO тут же загружу ограничения дату отгрузки
+        final String soapAction_sell = "http://www.sample-package.org#MobileAgents:GetRefusalList";
+        final String methodName_sell = "PS_GetLastSellDate";
+
+        SoapObject request_sell = new SoapObject(C.SOAP.NAME_SPACE, methodName_sell);
+
+        SoapSerializationEnvelope envelope_sell = new SoapSerializationEnvelope(SoapEnvelope.VER11);
+        envelope_sell.dotNet = true;
+        envelope_sell.setOutputSoapObject(request_sell);
+
+        HttpTransportSE httpTransportSELL = new HttpTransportSE(AppCache.USER_INFO.getProjectURL(), 60000);
+
+        try
+        {
+            httpTransportSELL.call(soapAction_sell, envelope_sell);
+            SoapObject responses = (SoapObject)envelope_sell.getResponse();
+            AppDB.getInstance(context).saveLastSellDate(responses);
         }
         catch (Exception ex)
         {

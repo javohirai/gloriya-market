@@ -4,10 +4,9 @@
       <root url="jar://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/21c1f1a2cb02d3c30ae36a1b20fcd72e/print-28.0.0/annotations.zip!/" />
     </ANNOTATIONS>
     <CLASSES>
-      <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/c530eca41e16abd54dd07396b95cf0df/print-28.0.0/res" />
-      <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/21c1f1a2cb02d3c30ae36a1b20fcd72e/print-28.0.0/AndroidManifest.xml" />
-      <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/21c1f1a2cb02d3c30ae36a1b20fcd72e/print-28.0.0/res" />
       <root url="jar://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/21c1f1a2cb02d3c30ae36a1b20fcd72e/print-28.0.0/jars/classes.jar!/" />
+      <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/21c1f1a2cb02d3c30ae36a1b20fcd72e/print-28.0.0/res" />
+      <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/21c1f1a2cb02d3c30ae36a1b20fcd72e/print-28.0.0/AndroidManifest.xml" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

@@ -1,10 +1,9 @@
 <component name="libraryTable">
   <library name="Gradle: com.android.support.test.espresso:espresso-core:2.2.2@aar">
     <CLASSES>
-      <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/a7270356784ecd04fcba2b6f71defe02/espresso-core-2.2.2/res" />
       <root url="jar://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/4ed2c880e599ee260ed779405ae84b6c/espresso-core-2.2.2/jars/classes.jar!/" />
-      <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/4ed2c880e599ee260ed779405ae84b6c/espresso-core-2.2.2/AndroidManifest.xml" />
       <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/4ed2c880e599ee260ed779405ae84b6c/espresso-core-2.2.2/res" />
+      <root url="file://$PROJECT_DIR$/../gradle-6.4.1/caches/transforms-2/files-2.1/4ed2c880e599ee260ed779405ae84b6c/espresso-core-2.2.2/AndroidManifest.xml" />
     </CLASSES>
     <JAVADOC>
       <root url="jar://$PROJECT_DIR$/../gradle-6.4.1/caches/modules-2/files-2.1/com.android.support.test.espresso/espresso-core/2.2.2/385a61d4e1b44503072bb72999bb4cb0ded833a8/espresso-core-2.2.2-javadoc.jar!/" />
