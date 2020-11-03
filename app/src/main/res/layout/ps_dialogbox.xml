@@ -22,7 +22,7 @@
         android:orientation="horizontal">
         <Button
             style="?android:attr/buttonBarButtonStyle"
-            android:id="@+id/PS_dialogBtn1"
+            android:id="@+id/ps_dialogBtn1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"/>
