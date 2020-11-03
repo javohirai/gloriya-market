@@ -287,6 +287,28 @@ public class MakeOrderNewActivity extends BaseActivity implements GPS.OnCoordina
         warningDialog.show();
     }
 
+    private void InformDialogNew(String title, final int orderId) {
+        final Dialog warningDialog = new Dialog(this);
+        warningDialog.setTitle(R.string.app_name);
+        warningDialog.setContentView(R.layout.ps_dialogbox);
+        warningDialog.setCanceledOnTouchOutside(false);
+
+        ((TextView) warningDialog.findViewById(R.id.dialogText)).setText(title);
+
+        View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                warningDialog.cancel();
+            }
+        };
+
+        Button button1 = (Button) warningDialog.findViewById(R.id.PS_dialogBtn1);
+        button1.setOnClickListener(listener);
+        button1.setText(R.string.dialog_btn_ok);
+
+        warningDialog.show();
+    }
+
     /**
      * @return временное номерное название заказа
      */
@@ -687,8 +709,11 @@ public class MakeOrderNewActivity extends BaseActivity implements GPS.OnCoordina
                 orderPages.setAdapter(orderAdapter);
 
                 if (result.getResponseCode().equals("2"))
-                    InformDialog(String.format("%s. %s", result.getOrderTitle(), result.getMessage()), result.getOrderId());
-                else if (result.getResponseCode().equals("-10")){
+                    // @author MrJ
+                    // InformDialog(String.format("%s. %s", result.getOrderTitle(), result.getMessage()), result.getOrderId());
+                    InformDialogNew(String.format("%s", result.getMessage()), result.getOrderId());
+                    //
+                else if (result.getResponseCode().equals("-10")) {
                     if (changedOrders.size() > 0) {
                         LayoutInflater lf = LayoutInflater.from(MakeOrderNewActivity.this);
                         AlertDialog.Builder adb = new AlertDialog.Builder(MakeOrderNewActivity.this);
@@ -703,8 +728,8 @@ public class MakeOrderNewActivity extends BaseActivity implements GPS.OnCoordina
                         });
                         adb.setTitle("Внимание! Обнаружено обновление цен!");
                         adb.create().show();
-                        Toast.makeText(MakeOrderNewActivity.this,"Суммы сохраненных и открытых заказов актуализированы!\n" +
-                                "Повторите отправку заказа!",Toast.LENGTH_LONG).show();
+                        Toast.makeText(MakeOrderNewActivity.this, "Суммы сохраненных и открытых заказов актуализированы!\n" +
+                                "Повторите отправку заказа!", Toast.LENGTH_LONG).show();
                     }
                 }
                 return;

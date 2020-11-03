@@ -145,7 +145,7 @@ public class AgentActivity extends BaseActivity implements View.OnClickListener 
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnUpdateKpi:
-                new LoadKpi().execute();
+                new LoadKpiWithButton().execute();
                 break;
             default:
                 if (AppCache.USER_INFO.getUserType() == UserType.Agent) {
@@ -355,6 +355,65 @@ public class AgentActivity extends BaseActivity implements View.OnClickListener 
         protected Void doInBackground(Void... params) {
             ReqGetKPI.load();
             PS_ReqGetPriceListUpdateTime.loadLastSellDate(AgentActivity.this);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            if (dialog.isShowing())
+                dialog.cancel();
+
+            ((TextView) findViewById(R.id.kpiPlan)).setText(AppCache.USER_INFO.getPlan());
+            ((TextView) findViewById(R.id.kpiInFact)).setText(AppCache.USER_INFO.getFact());
+            ((TextView) findViewById(R.id.okb)).setText(String.format("%s", AppCache.USER_INFO.getOkb()));
+            ((TextView) findViewById(R.id.akbPlan)).setText(Integer.toString(AppCache.USER_INFO.getAkbPlan()));
+            ((TextView) findViewById(R.id.akbFact)).setText(Integer.toString(AppCache.USER_INFO.getAkbFact()));
+            ((TextView) findViewById(R.id.akbPercent)).setText(AppCache.USER_INFO.getAkbPercent());
+            ((TextView) findViewById(R.id.kpiUpdateDate)).setText(AppCache.USER_INFO.getKpiUpdatedDate());
+
+            // Если существует изменённые документы пока выводим в логи
+            if (changedOrders.size() > 0){
+                LayoutInflater lf = LayoutInflater.from(AgentActivity.this);
+                AlertDialog.Builder adb = new AlertDialog.Builder(AgentActivity.this);
+                ListAdapter adapter = new PS_orderListAdapter(lf,changedOrders);
+                adb.setAdapter(adapter,null);
+                adb.setNegativeButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                adb.setTitle("Цены товаров были изменены. Суммы следующих заказов были пересчитаны");
+                adb.create().show();
+            }
+        }
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    private class LoadKpiWithButton extends AsyncTask<Void, Integer, Void> {
+        private Dialog dialog;
+
+        @Override
+        protected void onPreExecute() {
+            dialog = getInformDialog(AgentActivity.this, getString(R.string.dlg_txt_kpi_load));
+            dialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            ReqGetKPI.load();
+            PS_ReqGetPriceListUpdateTime.loadLastSellDate(AgentActivity.this);
+            // @author MrJ
+            // TODO загружаю updateTime для виды цен
+            publishProgress(3);
+            PS_ReqGetPriceListUpdateTime.load(AgentActivity.this);
+            //
+            if (AppDB.getInstance(AgentActivity.this).needToUpdatePriceTypes(0)) {
+                publishProgress(4);
+                ReqPriceType.load(AgentActivity.this);
+                publishProgress(5);
+                ReqPriceList.load(AgentActivity.this);
+            }
             return null;
         }
 
