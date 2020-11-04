@@ -28,6 +28,7 @@ import com.kashtansystem.project.gloriyamarketing.activity.main.BaseActivity;
 import com.kashtansystem.project.gloriyamarketing.activity.main.LoginActivity;
 import com.kashtansystem.project.gloriyamarketing.adapters.MakeOrderItemsAdapter;
 import com.kashtansystem.project.gloriyamarketing.adapters.PS_orderListAdapter;
+import com.kashtansystem.project.gloriyamarketing.adapters.holders.MakeOrderItemsHolder;
 import com.kashtansystem.project.gloriyamarketing.database.AppDB;
 import com.kashtansystem.project.gloriyamarketing.models.listener.OnDialogBtnsClickListener;
 import com.kashtansystem.project.gloriyamarketing.models.template.CreditVisitTemplate;
@@ -162,7 +163,46 @@ public class MakeOrderNewActivity extends BaseActivity implements GPS.OnCoordina
     public boolean onOptionsItemSelected(MenuItem menuItem) {
         switch (menuItem.getItemId()) {
             case android.R.id.home:
-                finish();
+                // @author MrJ
+                boolean haveOrdersWithGood = false;
+                for (MadeOrderTemplate orderItem : orderItems) {
+                    if (orderItem.getGoodsList().size() > 0 && !(orderItem.getStatus() == OrderStatus.Sent
+                            || orderItem.getStatus() == OrderStatus.NeedToSend
+                            || orderItem.getStatus() == OrderStatus.SavedLocal))
+                        haveOrdersWithGood = true;
+                }
+                if (!haveOrdersWithGood)
+                    finish();
+                else{
+                    AlertDialog.Builder adb = new AlertDialog.Builder(this);
+                    if(orderItems.size()==1)
+                        adb.setTitle(R.string.dialog_title_save_document);
+                    else
+                        adb.setTitle(R.string.dialog_title_save_documents);
+                    adb.setNeutralButton("Отмена", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    });
+                    adb.setPositiveButton("Да", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            for (MadeOrderTemplate orderItem : orderItems) {
+                                orderItem.setSaveLocal(true);
+                            }
+                            attemptSendOrSaveOrder();
+                        }
+                    });
+                    adb.setNegativeButton("Нет", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    });
+                    adb.create().show();
+                }
+                //
                 break;
             case R.id.mPhotoRep:
                 cameraPermission();
@@ -300,7 +340,7 @@ public class MakeOrderNewActivity extends BaseActivity implements GPS.OnCoordina
             }
         };
 
-        Button button1 = (Button) warningDialog.findViewById(R.id.PS_dialogBtn1);
+        Button button1 = (Button) warningDialog.findViewById(R.id.ps_dialogBtn1);
         button1.setOnClickListener(listener);
         button1.setText(R.string.dialog_btn_ok);
 

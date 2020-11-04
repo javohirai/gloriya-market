@@ -348,4 +348,7 @@
     <string name="pick_contract">Выбрать</string>
     <string name="fio_hint">ФИО руководителя</string>
 
+    <string name="dialog_title_save_document">Заказ был изменен, сохранить изменения?</string>
+    <string name="dialog_title_save_documents">Заказы были изменены, сохранить изменения?</string>
+
 </resources>
