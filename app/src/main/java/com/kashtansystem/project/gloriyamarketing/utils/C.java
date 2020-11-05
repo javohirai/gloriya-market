@@ -33,7 +33,7 @@ public final class C
                 "http://kit.gloriya.uz:5443/EVYAP_UT/EVYAP_UT.1cws",
                 "http://kit.gloriya.uz:5443/loreal_ut/loreal_ut.1cws",
                 "http://kit.gloriya.uz:5443/EVYAP_TEST/EVYAP_TEST.1cws",
-                "http://kit.gloriya.uz:5443/ut_test_/ut_test.1cws"
+                "http://kit.gloriya.uz:5443/ut_test/ut_test.1cws"
         };
 
     }
