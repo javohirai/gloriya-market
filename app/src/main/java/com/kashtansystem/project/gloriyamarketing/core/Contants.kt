@@ -11,7 +11,7 @@ enum class SoapProject(val projectName:String, val url: String){
     EVYAP("EVYAP","http://kit.gloriya.uz:5443/EVYAP_UT/EVYAP_UT.1cws"),
     LOREAL("LOREAL","http://kit.gloriya.uz:5443/loreal_ut/loreal_ut.1cws"),
     TEST("TEST EVYAP","http://kit.gloriya.uz:5443/EVYAP_TEST/EVYAP_TEST.1cws"),
-    TESTAvon("TEST AVON","http://kit.gloriya.uz:5443/ut_test_/ut_test_.1cws"),
+    TESTAvon("TEST AVON","http://kit.gloriya.uz:5443/ut_test_/ut_test.1cws"),
     ;
     companion object {
         fun getAllProjectsName():Array<String>{
