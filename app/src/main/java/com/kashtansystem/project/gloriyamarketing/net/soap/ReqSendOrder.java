@@ -61,7 +61,7 @@ public class ReqSendOrder {
                     .format(new Date(order.getCreatedDate())));
 
         String commentTo = order.getCommentTo();
-        if (commentTo.equals("supervisor")) {
+        if (commentTo.equals("supervisor")||commentTo.equals("")) {
             request.addProperty("CommentSupervisor", order.getComment());
             request.addProperty("CommentForwarder", "");
         } else {

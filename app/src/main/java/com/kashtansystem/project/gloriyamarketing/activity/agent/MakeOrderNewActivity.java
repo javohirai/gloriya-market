@@ -457,6 +457,12 @@ public class MakeOrderNewActivity extends BaseActivity implements GPS.OnCoordina
                 return;
             }
 
+            if (madeOrder.getUploadDateValue().equals("")) {
+                //informDialog.cancel();
+                InformDialog(String.format("%s. %s", madeOrder.getOrderTitle(), getString(R.string.dialog_text_delivery_date_empty)), counter);
+                return;
+            }
+
             if (madeOrder.isOnCredit()) {
                 if (madeOrder.getCreditVisits().isEmpty()) {
                     InformDialog(String.format("%s. %s", madeOrder.getOrderTitle(), getString(R.string.dialog_text_visits_is_empty)), counter);
